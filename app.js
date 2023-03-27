@@ -7,69 +7,69 @@ const options = {
   fetch('https://api.coinranking.com/v2/coin/Qwsogvtv82FCd/history?timePeriod=1y', options)
     .then((response) => response.json())
     .then((result) =>  {
+    const res = result.data.history;
+    renderLineChart(res)
+    renderBarChart(res)
+})
+
+function getSeries(result){
   
-   
-    const a = result.data.history;
-   
-    //находим общую сумму за месяц и количество дней в месяце
-   
-    
-    const sumForMonth = [];
-    const numberOfDays = [];
-
-    a.forEach((entry) => {
-        
-      const {timestamp, price} = entry
-      let date = new Date(timestamp*1000)
-      const month =  date.getMonth();  
-        
-    if(sumForMonth[month] ) {
-        sumForMonth[month] = sumForMonth[month] + Number(price);
-        numberOfDays[month] = numberOfDays[month] + 1;
-      } else {
-        sumForMonth[month] = Number(price); 
-        numberOfDays[month] = 1;
-      }  
-      });
-
-//находим чреднее арифметическое за месяц
-
+  const sumForMonth = [];
+  const numberOfDays = [];
   let final =[];
+
+
+
+  result.forEach((entry) => {
+      
+    const {timestamp, price} = entry
+    let date = new Date(timestamp*1000)
+    const month =  date.getMonth();  
+      
+  if(sumForMonth[month] ) {
+      sumForMonth[month] = sumForMonth[month] + Number(price);
+      numberOfDays[month] = numberOfDays[month] + 1;
+    } else {
+      sumForMonth[month] =  Number(price); 
+      numberOfDays[month] = 1;
+    }  
+    });
+
+
 
   for( let i= 0; i<sumForMonth.length; i++  ) {
     final.push(Math.floor(sumForMonth[i]/numberOfDays[i]))
   }
 
-  console.log(final)
-
-
+  return final
+}
+function renderLineChart(result){
   NamesOfMonths = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sept', 'oct', 'nov', 'dec']
 
-//строим график
-
-  var options = {
-    chart: {
-      type: 'line'
-    },
-    series: [{
-      name: 'price',
-      data: final
-    }],
-    xaxis: {
-      categories:   NamesOfMonths
+  //строим график
+  
+    var options = {
+      chart: {
+        type: 'line'
+      },
+      series: [{
+        name: 'price',
+        data: getSeries(result)
+      }],
+      xaxis: {
+        categories:   NamesOfMonths
+      }
     }
-  }
-  
-  var chart = new ApexCharts(document.querySelector("#chart"), options);
-  
-  chart.render();
-
-//555
-
+    
+    var chart = new ApexCharts(document.querySelector("#chart"), options);
+    
+    chart.render();
+}
+function renderBarChart(result){
 var options = {
   series: [{
   name: 'Inflation',
-  data: final
+  data: getSeries(result)
 }],
   chart: {
   height: 350,
@@ -146,6 +146,7 @@ title: {
 }
 };
 
-var chart2 = new ApexCharts(document.querySelector("#chart2"), options);
-chart2.render();
-})
+var chart = new ApexCharts(document.querySelector("#chart2"), options);
+chart.render();
+}
+
